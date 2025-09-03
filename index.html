@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مطعم سكورا - الطعام الياباني الأصيل</title>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link rel="stylesheet" href="style.css">
+   
+</head>
+
+
+
+<body>
+
+  <div class="diagonal-lines"></div>
+ 
+
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">🌸 teriyaki <sup>Sushi</sup></div>
+            <ul class="nav-menu">
+                <li><a href="#home">HOME</a></li>
+                <li><a href="#menu">MENU</a></li>
+                <li><a href="#about">ABOUT US</a></li>
+                <li><a href="#contact">CALL US</a></li>
+            </ul>
+            <button class="cart-btn" onclick="toggleCart()">
+                <span class="cart-count" id="cartCount">0</span>
+                <i class="fi fi-rr-shopping-cart"></i>
+            </button>
+        </nav>
+    </header>
+
+    <section class="hero" id="home">
+        <h1>welcome into <span class="namelo" > teriyaki sushi </span> restaurant</h1>
+        <p>Discover the finest authentic Japanese flavors</p>
+    </section>
+
+    <main class="container">
+        <section class="categories">
+            <button class="category-btn active" onclick="filterCategory('all')">all</button>
+            <button class="category-btn" onclick="filterCategory('sushi')">Sushi</button>
+            <button class="category-btn" onclick="filterCategory('ramen')">ramen</button>
+            <button class="category-btn" onclick="filterCategory('tempura')">tempura</button>
+            <button class="category-btn" onclick="filterCategory('appetizers')">appetizers</button>
+            <button class="category-btn" onclick="filterCategory('desserts')">desserts</button>
+        </section>
+
+        <section class="food-grid" id="foodGrid">
+            <!-- الأطباق ستُضاف هنا ديناميكياً -->
+        </section>
+    </main>
+
+    <!-- نافذة السلة المنبثقة -->
+    <div class="cart-popup" id="cartPopup">
+        <div class="cart-content">
+            <button class="close-btn" onclick="toggleCart()">&times;</button>
+            <h2>cart</h2>
+            <div id="cartItems"></div>
+            <div class="cart-total" id="cartTotal">Total : 0 درهم</div>
+            <button class="checkout-btn" onclick="checkout()">إتمام الطلب</button>
+        </div>
+    </div>
+
+    <script>
+        // قاعدة بيانات الأطباق
+        const dishes = [
+            {
+                id: 1,
+                name: "سوشي سالمون",
+                category: "sushi",
+                price: 85,
+                pieces: 8,
+                rating: 4.8,
+                image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400",
+                description: "قطع طازجة من سمك السالمون النرويجي مع الأرز الياباني المتبل"
+            },
+            {
+                id: 2,
+                name: "سوشي التونة",
+                category: "sushi",
+                price: 95,
+                pieces: 8,
+                rating: 4.9,
+                image: "https://images.unsplash.com/photo-1553621042-f6e147245754?w=400",
+                description: "أفضل أنواع التونة الطازجة مع الأرز الياباني التقليدي"
+            },
+            {
+                id: 3,
+                name: "رامن التونكوتسو",
+                category: "ramen",
+                price: 65,
+                pieces: 1,
+                rating: 4.7,
+                image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400",
+                description: "شوربة رامن غنية بالطعم مع شرائح لحم الخنزير والبيض المسلوق"
+            },
+            {
+                id: 4,
+                name: "تيمبورا الجمبري",
+                category: "tempura",
+                price: 75,
+                pieces: 6,
+                rating: 4.6,
+                image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400",
+                description: "جمبري طازج مقلي بعجينة التيمبورا الخفيفة والمقرمشة"
+            },
+            {
+                id: 5,
+                name: "إيداماميه",
+                category: "appetizers",
+                price: 25,
+                pieces: 1,
+                rating: 4.3,
+                image: "d7505-2136-165349-9.jpg",
+                description: "فول الصويا المسلوق بالملح البحري - مقبل صحي ولذيذ"
+            },
+            {
+                id: 6,
+                name: "موتشي الآيس كريم",
+                category: "desserts",
+                price: 35,
+                pieces: 3,
+                rating: 4.5,
+                image: "OIP.jpg",
+                description: "حلوى يابانية تقليدية محشوة بآيس كريم الفانيليا"
+            },
+            {
+                id: 7,
+                name: "سوشي كاليفورنيا رول",
+                category: "sushi",
+                price: 55,
+                pieces: 8,
+                rating: 4.4,
+                image: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=400",
+                description: "لفائف كاليفورنيا بسرطان البحر والأفوكادو والخيار"
+            },
+            {
+                id: 8,
+                name: "رامن الخضار",
+                category: "ramen",
+                price: 45,
+                pieces: 1,
+                rating: 4.2,
+                image: "https://images.unsplash.com/photo-1623341214825-9f4f963727da?w=400",
+                description: "رامن نباتي مع مرق الخضار والذرة والبصل الأخضر"
+            }
+        ];
+
+        let cart = [];
+        let currentCategory = 'all';
+
+        // تحميل الأطباق عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            displayDishes(dishes);
+        });
+
+        function displayDishes(dishesToShow) {
+            const grid = document.getElementById('foodGrid');
+            grid.innerHTML = '';
+
+            dishesToShow.forEach(dish => {
+                const dishCard = createDishCard(dish);
+                grid.appendChild(dishCard);
+            });
+        }
+
+        function createDishCard(dish) {
+            const card = document.createElement('div');
+            card.className = 'food-card';
+            card.setAttribute('data-category', dish.category);
+            
+            card.innerHTML = `
+                <img src="${dish.image}" alt="${dish.name}" class="card-image">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="food-name">${dish.name}</h3>
+                            <div class="food-details">
+                                <span class="pieces-count">${dish.pieces} قطع</span>
+                                <div class="rating">
+                                    <span class="stars">★★★★★</span>
+                                    <span>${dish.rating}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="food-price">${dish.price} درهم</div>
+                    </div>
+                    <p class="food-description">${dish.description}</p>
+                    <div class="card-actions">
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="changeQuantity(${dish.id}, -1)">-</button>
+                            <input type="number" class="quantity-input" id="qty-${dish.id}" value="1" min="1">
+                            <button class="quantity-btn" onclick="changeQuantity(${dish.id}, 1)">+</button>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(${dish.id})">أضف للسلة</button>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            let filteredDishes = category === 'all' ? dishes : dishes.filter(dish => dish.category === category);
+            displayDishes(filteredDishes);
+        }
+
+        function changeQuantity(dishId, change) {
+            const input = document.getElementById(`qty-${dishId}`);
+            let currentValue = parseInt(input.value);
+            let newValue = currentValue + change;
+            if (newValue < 1) newValue = 1;
+            input.value = newValue;
+        }
+
+        function addToCart(dishId) {
+            const dish = dishes.find(d => d.id === dishId);
+            const quantity = parseInt(document.getElementById(`qty-${dishId}`).value);
+            
+            const existingItem = cart.find(item => item.id === dishId);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    ...dish,
+                    quantity: quantity
+                });
+            }
+
+            updateCartDisplay();
+            showNotification('تم إضافة الطبق للسلة!');
+        }
+
+        function updateCartDisplay() {
+            document.getElementById('cartCount').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            cartItems.innerHTML = '';
+            let total = 0;
+
+            cart.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'cart-item';
+                itemElement.innerHTML = `
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <small>${item.quantity} × ${item.price} درهم</small>
+                    </div>
+                    <div>
+                        <strong>${item.quantity * item.price} درهم</strong>
+                        <button onclick="removeFromCart(${item.id})" style="margin-right: 1rem; color: #ff6b6b; border: none; background: none; cursor: pointer;">✕</button>
+                    </div>
+                `;
+                cartItems.appendChild(itemElement);
+                total += item.quantity * item.price;
+            });
+
+            cartTotal.textContent = `المجموع: ${total} درهم`;
+        }
+
+        function removeFromCart(dishId) {
+            cart = cart.filter(item => item.id !== dishId);
+            updateCartDisplay();
+        }
+
+        function toggleCart() {
+            const popup = document.getElementById('cartPopup');
+            popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('السلة فارغة!');
+                return;
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            alert(`شكراً لطلبكم! المجموع: ${total} درهم\nسيتم تحضير طلبكم في 20-30 دقيقة`);
+            cart = [];
+            updateCartDisplay();
+            toggleCart();
+        }
+
+        function showNotification(message) {
+            // يمكن تحسين هذه الدالة لعرض إشعارات أفضل
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 1rem;
+                border-radius: 5px;
+                z-index: 1000;
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // إغلاق السلة عند النقر خارجها
+        document.getElementById('cartPopup').addEventListener('click', function(e) {
+            if (e.target === this) {
+                toggleCart();
+            }
+        });
+    </script>
+</body>
+</html>
